@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PHED South 24 Parganas Mechanical Division — Live Estimate Portal</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.38rem 0.65rem;
+      border-radius: 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      line-height: 1.1;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn-action:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+    .pulse-dot {
+      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Government Portal Banner -->
+  <header class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-lg border-b border-blue-800/40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-300 mb-1">
+            <span>Public Health Engineering Directorate • Govt. of West Bengal</span>
+          </div>
+          <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
+            South 24 Parganas Mechanical Division
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1">
+            Live Estimate &amp; Notesheet Portal (View-Only) &nbsp;|&nbsp; Suman Nath, Junior Engineer (Electrical)
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <div id="syncBadge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 text-xs font-medium text-slate-200">
+            <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 pulse-dot"></span>
+            <span id="syncText">Connecting live feed...</span>
+          </div>
+          <button id="refreshBtn" type="button" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition cursor-pointer">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- KPI Summary Cards -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Estimates</p>
+        <p id="kpiTotalCount" class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">--</p>
+        <p class="text-xs text-slate-400 mt-1">Registered in Master Log</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Value</p>
+        <p id="kpiTotalValue" class="text-2xl sm:text-3xl font-extrabold text-blue-700 mt-1">--</p>
+        <p class="text-xs text-slate-400 mt-1">Inclusive of GST &amp; Cess</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Agency Allotted</p>
+        <p id="kpiAllotted" class="text-2xl sm:text-3xl font-extrabold text-emerald-700 mt-1">--</p>
+        <p id="kpiPendingSub" class="text-xs text-slate-400 mt-1">-- pending allotment</p>
+      </div>
+      <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80">
+        <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">NIT Invited</p>
+        <p id="kpiNitInvited" class="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1">--</p>
+        <p class="text-xs text-slate-400 mt-1">Synced from NIQ Tracker</p>
+      </div>
+    </section>
+
+    <!-- Controls: Search, Filter & Quick Folder Access -->
+    <section class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <!-- Search -->
+        <div class="relative flex-1 max-w-xl">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+          </svg>
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Search by Estimate No., Work Name, Agency, Category, or NIT Memo..."
+            class="w-full pl-10 pr-4 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50 focus:bg-white transition"
+          />
+        </div>
+
+        <!-- Quick Drive Folder Buttons (View-Only) -->
+        <div class="flex flex-wrap items-center gap-2">
+          <a href="https://drive.google.com/drive/folders/1nNsAVfEBM9AW_xNbxxWyzqe49kTUrwVS" target="_blank" rel="noopener noreferrer"
+             class="btn-action bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300">
+            <span>📁</span> Estimate Database Folder
+          </a>
+          <a href="https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1" target="_blank" rel="noopener noreferrer"
+             class="btn-action bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300">
+            <span>📁</span> Notesheet Folder
+          </a>
+        </div>
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="flex flex-wrap items-center gap-2 pt-1">
+        <span class="text-xs font-semibold text-slate-500 mr-1">Filter:</span>
+        <button type="button" data-filter="all" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white cursor-pointer">All</button>
+        <button type="button" data-filter="allotted" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Agency Allotted</button>
+        <button type="button" data-filter="pending" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">Without Agency</button>
+        <button type="button" data-filter="nit" class="filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer">NIT Invited</button>
+        <span id="resultCount" class="ml-auto text-xs font-medium text-slate-500"></span>
+      </div>
+    </section>
+
+    <!-- Error / Status Notice (Hidden unless needed) -->
+    <div id="statusNotice" class="hidden rounded-xl p-3.5 text-xs sm:text-sm border"></div>
+
+    <!-- Desktop Table View -->
+    <section class="hidden md:block bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-900 text-slate-100 text-xs uppercase tracking-wider">
+              <th class="py-3.5 px-4 font-semibold w-20">Est. #</th>
+              <th class="py-3.5 px-4 font-semibold">Work Description &amp; Category</th>
+              <th class="py-3.5 px-4 font-semibold w-44">Agency</th>
+              <th class="py-3.5 px-4 font-semibold text-right w-36">Est. Amount</th>
+              <th class="py-3.5 px-4 font-semibold w-44">NIT Status</th>
+              <th class="py-3.5 px-4 font-semibold w-72">View &amp; Direct PDF Actions</th>
+            </tr>
+          </thead>
+          <tbody id="desktopTableBody" class="divide-y divide-slate-200 text-sm"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Mobile Card View -->
+    <section id="mobileCardList" class="md:hidden space-y-3"></section>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <span>PHE Directorate • South 24 Parganas Mechanical Division • View-Only Live Portal</span>
+      <span id="lastUpdatedFoot">Auto-syncs with Master Estimate Register</span>
+    </div>
+  </footer>
+
+  <script>
+    const SHEET_ID = "19n7IP8ZdtmcFZXos7CkSFxLDxgO1-cPkpzCoN6Co6Ic";
+    const FEED_SHEET = "Web_Feed";
+
+    const FALLBACK_SNAPSHOT = [{"estNo": 1, "date": "19-11-2026", "agency": "Joy Guru Trading", "amount": 90889.0, "category": "Operation & Guarding", "description": "Operation & Guarding of the electric operated auto control pumping machinery at pump house no-1 of Payla Bhagabanpur W/S Scheme under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1HxUCbLtjFXV4G1Ut47tE7V8TI8UKdictkoFlkU8lC3w/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1yfXInb2xX0r3bth-ZjmCYEofZlkiTtHroiz6JWIpbgk/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/10habY45nyLhOB5X8HjTyTK6UBH2mG7Kt", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1yfXInb2xX0r3bth-ZjmCYEofZlkiTtHroiz6JWIpbgk/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1HxUCbLtjFXV4G1Ut47tE7V8TI8UKdictkoFlkU8lC3w/export?format=pdf"}, {"estNo": 2, "date": "19-11-2026", "agency": "Joy Guru Trading", "amount": 90889.0, "category": "Operation & Guarding", "description": "Operation & Guarding of the electric operated auto control pumping machinery at pump house no-2 of Payla Bhagabanpur W/S Scheme under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1lsiKJf3T5rvUZDXbMcEcR_VZ7hfXJwpQrRTqmJxgc48/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1FtBuTJYUpeVQeKILDgazAXf9DuN_Cs_a1sdBFfzXl60/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/10habY45nyLhOB5X8HjTyTK6UBH2mG7Kt", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1FtBuTJYUpeVQeKILDgazAXf9DuN_Cs_a1sdBFfzXl60/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1lsiKJf3T5rvUZDXbMcEcR_VZ7hfXJwpQrRTqmJxgc48/export?format=pdf"}, {"estNo": 3, "date": "19-11-2026", "agency": "D.K. Electric", "amount": 72807.0, "category": "Auto Timer for Manual Panel", "description": "Supply & Installation of Auto Timer for Manual Panel at Bamunia Zone-1 (PH-1 & PH-2), Bamunia Zone-2 (PH-1 & PH-2) & Bamunia Zone-3 (PH-1) W/S Scheme of Bhangar-II Block in the district of South 24 Parganas under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1Tf7l-qgufSFaEjEAoQ0jwKhg9LoY9YHSVTXTAtXtq7A/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1RWk99xswT2-hcCmh1POrX901R8SgWElTEVVIwFkYaHs/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1oLWkdwAlmbvzk34Pqp6yfanIeSySBXJE", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1RWk99xswT2-hcCmh1POrX901R8SgWElTEVVIwFkYaHs/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1Tf7l-qgufSFaEjEAoQ0jwKhg9LoY9YHSVTXTAtXtq7A/export?format=pdf"}, {"estNo": 4, "date": "19-11-2026", "agency": "D.K. Electric", "amount": 43684.0, "category": "Auto Timer for Manual Panel", "description": "Supply & Installation of Auto Timer for Manual Panel at Bhogali (PH-1 & PH-2) W/S Scheme of Bhangar-II Block & Godkhali (PH-1) W/S Scheme of Basanti Block in the district of South 24 Parganas under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/12x2Gl0_BjIZP8LZ1v60yksYJYAcKBbrQE6bos1AUO0Y/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1p99rlBzUzNZBZf5bHO3PECvgtgu24_6CeRctXA_SY7M/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1oLWkdwAlmbvzk34Pqp6yfanIeSySBXJE", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1p99rlBzUzNZBZf5bHO3PECvgtgu24_6CeRctXA_SY7M/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/12x2Gl0_BjIZP8LZ1v60yksYJYAcKBbrQE6bos1AUO0Y/export?format=pdf"}, {"estNo": 5, "date": "19-11-2026", "agency": "D.K. Electric", "amount": 72807.0, "category": "Auto Timer for Manual Panel", "description": "Supply & Installation of Auto Timer for Manual Panel at Mallickpur (PH-1 & PH-2), Krishnadevpur (PH-1), Lakshmikantapur (PH-1) & Nilambarpur (PH-1) W/S Scheme of Mandirbazar Block in the district of South 24 Parganas under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1zWSLBlUkmopAcqdb_Puhc1Z1gG3ZzzIeKtFvn0K9A3I/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1F6P-pC_9Dih8t5jpTNh2IH6IqOySdYqaWXba52GbU5M/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1oLWkdwAlmbvzk34Pqp6yfanIeSySBXJE", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1F6P-pC_9Dih8t5jpTNh2IH6IqOySdYqaWXba52GbU5M/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1zWSLBlUkmopAcqdb_Puhc1Z1gG3ZzzIeKtFvn0K9A3I/export?format=pdf"}, {"estNo": 6, "date": "19-11-2026", "agency": "D.K. Electric", "amount": 58246.0, "category": "Auto Timer for Manual Panel", "description": "Supply & Installation of Auto Timer for Manual Panel at Uttar Sultanpur (PH-1 & PH-2) & Purba Bishnupur (PH-1 & PH-2) W/S Scheme of Mandirbazar Block in the district of South 24 Parganas under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1b_SpVIE19oU8vA0w1uof7YeMyiSCJ7UkzhI9cxZQp98/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1QLwoTsTe-bRqaY_6KuRrJTqTYHNNC0R29dek_K_Mv_o/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1oLWkdwAlmbvzk34Pqp6yfanIeSySBXJE", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1QLwoTsTe-bRqaY_6KuRrJTqTYHNNC0R29dek_K_Mv_o/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1b_SpVIE19oU8vA0w1uof7YeMyiSCJ7UkzhI9cxZQp98/export?format=pdf"}, {"estNo": 7, "date": "19-11-2026", "agency": "D.K. Electric", "amount": 87368.0, "category": "Auto Timer for Manual Panel", "description": "Supply & Installation of Auto Timer for Manual Panel at Debipur (PH-1, PH-2 & PH-3), Mathurapur (PH-1), Uttar Durgapur (PH-1) & Sankarpur (PH-1) W/S Scheme of Mathurapur-I Block in the district of South 24 Parganas under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1fY-BA2RdXfkYHio-PqelLL_9PL0YRx_xYehxu8QNfeA/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1z2-CdcUMApuxhJZTu8rteP5ijDE4FqVkYgzf1KltGKo/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1oLWkdwAlmbvzk34Pqp6yfanIeSySBXJE", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1z2-CdcUMApuxhJZTu8rteP5ijDE4FqVkYgzf1KltGKo/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1fY-BA2RdXfkYHio-PqelLL_9PL0YRx_xYehxu8QNfeA/export?format=pdf"}, {"estNo": 8, "date": "20-11-2026", "agency": "Goutam Mistri", "amount": 52653.0, "category": "Pump Withdrawal & Lowering / Panel Repairing", "description": "Withdrawing & Lowering of 6 HP Submersible Pump-Motor Set at Debipur PH-3 and Repairing of MCC Panel / Starter at Uttar Gangadharpur PH-2 W/S Scheme under Mathurapur-I Block under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/14w5hNnaU-8e8FTXF616EGdLrW6EnCxrsp5gBmnanC98/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1vN6hRYBQEY9P3VjJWnIyViNzIzEuYUvRKEKYjuYVFgE/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1GhVylw0Sc19d9NpVbvUyewaWzvCl3PBO", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1vN6hRYBQEY9P3VjJWnIyViNzIzEuYUvRKEKYjuYVFgE/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/14w5hNnaU-8e8FTXF616EGdLrW6EnCxrsp5gBmnanC98/export?format=pdf"}, {"estNo": 9, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Mathurapur, Serpur, Shakshar & Kashidanga (Bhangar-I Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1yJx3DshTrKdYjujTkdfCNBmUKMiIvBhzeTC4TDpNBYI/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1uHu6QbyMy6MY1rDDrsRzuTUCN0FhopjscKpyKaNzVkA/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1uHu6QbyMy6MY1rDDrsRzuTUCN0FhopjscKpyKaNzVkA/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1yJx3DshTrKdYjujTkdfCNBmUKMiIvBhzeTC4TDpNBYI/export?format=pdf"}, {"estNo": 10, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Kashidanga, Padmapukuria & Garanberia (Bhangar-I Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1L9nhVT4D7u880GtqwCe6qN35c4R1wvAsM3FOafxB32A/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1ew5-lTNYdm_R8eYtjjWDL4p5lK_5LrvSX1D6RES9Jq4/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1ew5-lTNYdm_R8eYtjjWDL4p5lK_5LrvSX1D6RES9Jq4/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1L9nhVT4D7u880GtqwCe6qN35c4R1wvAsM3FOafxB32A/export?format=pdf"}, {"estNo": 11, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Ranigachi, Kashinathpur, Aug Gobindapur, Aug Narayanpur & Chandeneswar (Bhangar-I Block) under South 24 Pgs Mechanical Division, P.H. Engg. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1mE0mLmmQ_-xM2K78N0R2Q8ZyG9HHx7IQcoMs3r9kZBE/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1v7DvJAWbzMEBacoDJC8UXECM02XvV2GjNzH34JfjXuU/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1v7DvJAWbzMEBacoDJC8UXECM02XvV2GjNzH34JfjXuU/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1mE0mLmmQ_-xM2K78N0R2Q8ZyG9HHx7IQcoMs3r9kZBE/export?format=pdf"}, {"estNo": 12, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Dari Madhabpur, Madhabpur & Jhungri (Bhangar-I Block) under South 24 Pgs Mechanical Division, P.H. Engg. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/11GT_8YbCHiy9pnR5DpL8GOEWLe6sSjVNPFbJ28rpL2E/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1y-r5LJO49H7aw7BQj3Wcnawxm68xaRgPYC6xhKSZz48/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1y-r5LJO49H7aw7BQj3Wcnawxm68xaRgPYC6xhKSZz48/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/11GT_8YbCHiy9pnR5DpL8GOEWLe6sSjVNPFbJ28rpL2E/export?format=pdf"}, {"estNo": 13, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Jhungri, Satberia, Uspara & OHR-34 (Bhangar-I Block) under South 24 Pgs Mechanical Division, P.H. Engg. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1h15ln0I0njW9l0Dhi-rbS3hA0qncjH0tQlUd8YqGcbE/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1H-M4wnZrJ21HAzs4ggx-KGKdCMRnlKFysaGF5xaQO1g/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1H-M4wnZrJ21HAzs4ggx-KGKdCMRnlKFysaGF5xaQO1g/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1h15ln0I0njW9l0Dhi-rbS3hA0qncjH0tQlUd8YqGcbE/export?format=pdf"}, {"estNo": 14, "date": "20-11-2026", "agency": "Without Agency", "amount": 95700.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Bamunia Zone-1, Bamunia Zone-2 & Bhogali (Bhangar-II Block) under South 24 Pgs Mechanical Division, P.H. Engg. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1pb4LNZrkPbJ25DDYFQMjQt31RstQrX8ai1Ll75A5YLE/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1_283kpNRXQs8BmQ07MqzbkLVkBN052VpHwAVyE-jtYY/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1_283kpNRXQs8BmQ07MqzbkLVkBN052VpHwAVyE-jtYY/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1pb4LNZrkPbJ25DDYFQMjQt31RstQrX8ai1Ll75A5YLE/export?format=pdf"}, {"estNo": 15, "date": "20-11-2026", "agency": "Without Agency", "amount": 95700.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Mallickpur, Krishnadevpur, Lakshmikantapur & Uttar Sultanpur (Mandirbazar Block) under South 24 Pgs Mechanical Division, P.H. Engg. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1r_y78t1_0OjdnSRK6C-XpiD5KdW8ChkHKdvrLPEAjNY/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1a8ttBskZkWWRnoaD2ayzjQqrsDmppz46vTI4CLpCcOI/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1a8ttBskZkWWRnoaD2ayzjQqrsDmppz46vTI4CLpCcOI/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1r_y78t1_0OjdnSRK6C-XpiD5KdW8ChkHKdvrLPEAjNY/export?format=pdf"}, {"estNo": 16, "date": "20-11-2026", "agency": "Without Agency", "amount": 95700.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Uttar Sultanpur, Nilambarpur, Purba Bishnupur & Batiswar (Mandirbazar Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1Gd6-PuWMwSQ8Cdc6kutZyiQvq9vceslxMt2m0LAFsaw/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1Rk5zLbWDuOp3-WuRhrMIWD1_BKLHMLxqV8ySbP1MIVU/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1Rk5zLbWDuOp3-WuRhrMIWD1_BKLHMLxqV8ySbP1MIVU/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1Gd6-PuWMwSQ8Cdc6kutZyiQvq9vceslxMt2m0LAFsaw/export?format=pdf"}, {"estNo": 17, "date": "20-11-2026", "agency": "Without Agency", "amount": 95700.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Debipur, Mathurapur & Uttar Gangadharpur (Mathurapur-I Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1W1fSzl38Mrvg6KHL6Z7boMech0apFrYTIWLzqVOHbZs/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1526by242L00IYBuMBUvVV6nzzGsS7NOtEVW33XNEpD4/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1526by242L00IYBuMBUvVV6nzzGsS7NOtEVW33XNEpD4/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1W1fSzl38Mrvg6KHL6Z7boMech0apFrYTIWLzqVOHbZs/export?format=pdf"}, {"estNo": 18, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Uttar Durgapur, Sankarpur & Payla Bhagabanpur (Mathurapur-I Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1RjGWRkGqBrsQLmyawGfL70MtmAYyszB52I-t8yuEbqE/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1mOTGzWfLSft4i4yNlw1WA0DwecDhuu_o_cHjaGUHAYo/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1mOTGzWfLSft4i4yNlw1WA0DwecDhuu_o_cHjaGUHAYo/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1RjGWRkGqBrsQLmyawGfL70MtmAYyszB52I-t8yuEbqE/export?format=pdf"}, {"estNo": 19, "date": "20-11-2026", "agency": "Without Agency", "amount": 79750.0, "category": "Chlorine Supply", "description": "Supply & delivery of Calcium Hypochlorite granules at Payla Bhagabanpur, Purba Ranaghat & Ghat Bakultala (Mathurapur-I Block) under South 24 Pgs Mechanical Division, PHE Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/19lPewaonjh0kAwJueC11CgcM3i9YOGyM3T1lybEldNw/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1BuuL_EVpZngktrtwBuxfzpc4FLEkMkqaxoWdo1Qa0po/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1E8Nm1OW2HtGTgkKL31fmAaAwtJ-Dv3TU", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1BuuL_EVpZngktrtwBuxfzpc4FLEkMkqaxoWdo1Qa0po/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/19lPewaonjh0kAwJueC11CgcM3i9YOGyM3T1lybEldNw/export?format=pdf"}, {"estNo": 20, "date": "20-11-2026", "agency": "Essence Engineering", "amount": 22690.0, "category": "Panel Repairing, Submersible Cable & UPVC Pipe", "description": "Repairing works of Control Panel & 15 HP Submersible Pump Motor Set at Dari Madhabpur PH No-1 W/S Scheme along with supply of UPVC column pipe and submersible cable under Bhangar-I Block under SMD, P.H.E. Dte.", "nitStatus": "", "nitMemoNo": "", "nitMemoDate": "", "approvedCost": 0.0, "notesheetUrl": "https://docs.google.com/document/d/1I5pDNVOXLjIS20cFxaMH0ZmMpKfk2mJEdxrtRCvkjNg/edit", "estimateUrl": "https://docs.google.com/spreadsheets/d/1_JEbvdpIoqr1fRDieR42IoKSSyC34ZcsBSBpcpZcfBc/edit", "notesheetFolderUrl": "https://drive.google.com/drive/folders/1ECEBZES_cwh-R2xlXJUfcKdgzY56ovn1", "estimateFolderUrl": "https://drive.google.com/drive/folders/1jheUiHyHo2yENHPxFw00D15h_Rk-QXHM", "estimatePdfUrl": "https://docs.google.com/spreadsheets/d/1_JEbvdpIoqr1fRDieR42IoKSSyC34ZcsBSBpcpZcfBc/export?format=pdf&size=A4&portrait=true&fitw=true&top_margin=0.5&bottom_margin=0.5&left_margin=0.4&right_margin=0.4&gridlines=false&printtitle=false&sheetnames=false", "notesheetPdfUrl": "https://docs.google.com/document/d/1I5pDNVOXLjIS20cFxaMH0ZmMpKfk2mJEdxrtRCvkjNg/export?format=pdf"}];
+
+    let allRows = [];
+    let currentFilter = "all";
+
+    const formatINR = (num) => {
+      const n = Number(num);
+      if (isNaN(n) || n === 0) return "—";
+      return "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+    };
+
+    const escapeHtml = (str) => {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    };
+
+    function parseGvizJson(json) {
+      if (!json || !json.table || !json.table.rows) return [];
+
+      return json.table.rows
+        .map((r) => {
+          const c = r.c || [];
+          const val = (idx) => (c[idx] && c[idx].v !== null && c[idx].v !== undefined ? c[idx].v : "");
+          const fmt = (idx) => (c[idx] && c[idx].f ? c[idx].f : val(idx));
+          const estNo = val(0);
+          if (estNo === "" || estNo === null || isNaN(Number(estNo))) return null;
+          return {
+            estNo: Number(estNo),
+            date: String(fmt(1) || val(1) || "").trim(),
+            agency: String(val(2) || "").trim(),
+            amount: Number(val(3) || 0),
+            category: String(val(4) || "").trim(),
+            description: String(val(5) || "").trim(),
+            nitStatus: String(val(6) || "").trim(),
+            nitMemoNo: String(val(7) || "").trim(),
+            nitMemoDate: String(fmt(8) || val(8) || "").trim(),
+            approvedCost: Number(val(9) || 0),
+            notesheetUrl: String(val(10) || "").trim(),
+            estimateUrl: String(val(11) || "").trim(),
+            notesheetFolderUrl: String(val(12) || "").trim(),
+            estimateFolderUrl: String(val(13) || "").trim(),
+            estimatePdfUrl: String(val(14) || "").trim(),
+            notesheetPdfUrl: String(val(15) || "").trim()
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.estNo - b.estNo);
+    }
+
+    function setSyncState(state, message) {
+      const dot = document.getElementById("syncDot");
+      const txt = document.getElementById("syncText");
+      const notice = document.getElementById("statusNotice");
+      txt.textContent = message;
+
+      if (state === "live") {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        notice.classList.add("hidden");
+      } else if (state === "loading") {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400 pulse-dot";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-rose-400";
+        notice.className = "rounded-xl p-3.5 text-xs sm:text-sm border bg-rose-50 border-rose-200 text-rose-800";
+        notice.textContent = "Unable to reach Google Sheets live feed right now. Please check your internet connection and tap Refresh.";
+        notice.classList.remove("hidden");
+      }
+    }
+
+    function updateKPIs(rows) {
+      const totalCount = rows.length;
+      const totalValue = rows.reduce((sum, r) => sum + (r.amount || 0), 0);
+      const allotted = rows.filter((r) => r.agency && r.agency !== "—").length;
+      const pending = totalCount - allotted;
+      const nitInvited = rows.filter((r) => r.nitStatus.toLowerCase() === "invited" || r.nitMemoNo !== "").length;
+
+      document.getElementById("kpiTotalCount").textContent = totalCount;
+      document.getElementById("kpiTotalValue").textContent = formatINR(totalValue);
+      document.getElementById("kpiAllotted").textContent = allotted;
+      document.getElementById("kpiPendingSub").textContent = `${pending} without agency`;
+      document.getElementById("kpiNitInvited").textContent = nitInvited;
+    }
+
+    function buildActionButtons(r) {
+      const btns = [];
+      if (r.estimateUrl) {
+        btns.push(`<a href="${escapeHtml(r.estimateUrl)}" target="_blank" rel="noopener noreferrer" class="btn-action bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200">📄 View Estimate</a>`);
+      }
+      if (r.estimatePdfUrl) {
+        btns.push(`<a href="${escapeHtml(r.estimatePdfUrl)}" target="_blank" rel="noopener noreferrer" class="btn-action bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200">📥 Estimate PDF</a>`);
+      }
+      if (r.notesheetUrl) {
+        btns.push(`<a href="${escapeHtml(r.notesheetUrl)}" target="_blank" rel="noopener noreferrer" class="btn-action bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200">📝 View Notesheet</a>`);
+      }
+      if (r.notesheetPdfUrl) {
+        btns.push(`<a href="${escapeHtml(r.notesheetPdfUrl)}" target="_blank" rel="noopener noreferrer" class="btn-action bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200">📥 Notesheet PDF</a>`);
+      }
+      if (r.estimateFolderUrl) {
+        btns.push(`<a href="${escapeHtml(r.estimateFolderUrl)}" target="_blank" rel="noopener noreferrer" class="btn-action bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300">📁 Folder</a>`);
+      }
+      return btns.join("");
+    }
+
+    function renderRows() {
+      const q = document.getElementById("searchInput").value.trim().toLowerCase();
+      const filtered = allRows.filter((r) => {
+        if (currentFilter === "allotted" && !r.agency) return false;
+        if (currentFilter === "pending" && r.agency) return false;
+        if (currentFilter === "nit" && !(r.nitStatus.toLowerCase() === "invited" || r.nitMemoNo)) return false;
+
+        if (!q) return true;
+        const hay = `${r.estNo} ${r.date} ${r.agency} ${r.category} ${r.description} ${r.nitMemoNo} ${r.nitStatus}`.toLowerCase();
+        return hay.includes(q);
+      });
+
+      document.getElementById("resultCount").textContent = `Showing ${filtered.length} of ${allRows.length} estimates`;
+
+      const tbody = document.getElementById("desktopTableBody");
+      const mobileList = document.getElementById("mobileCardList");
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-10 text-center text-slate-500">No matching estimates found.</td></tr>`;
+        mobileList.innerHTML = `<div class="bg-white rounded-xl p-8 text-center text-slate-500 border border-slate-200">No matching estimates found.</div>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((r) => {
+        const agencyHtml = r.agency
+          ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(r.agency)}</span>`
+          : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">Not Allotted</span>`;
+
+        const nitHtml = r.nitMemoNo
+          ? `<div><span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">Invited</span><div class="text-xs font-medium text-slate-700 mt-1">${escapeHtml(r.nitMemoNo)}</div><div class="text-[11px] text-slate-400">${escapeHtml(r.nitMemoDate)}</div></div>`
+          : `<span class="text-xs text-slate-400">Pending NIT</span>`;
+
+        return `
+          <tr class="hover:bg-slate-50/90 transition align-top">
+            <td class="py-3.5 px-4">
+              <div class="font-bold text-slate-900">#${r.estNo}</div>
+              <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(r.date)}</div>
+            </td>
+            <td class="py-3.5 px-4">
+              ${r.category ? `<span class="inline-block text-[11px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded bg-blue-50 text-blue-700 mb-1">${escapeHtml(r.category)}</span>` : ""}
+              <p class="text-slate-800 text-xs sm:text-sm leading-relaxed">${escapeHtml(r.description)}</p>
+            </td>
+            <td class="py-3.5 px-4">${agencyHtml}</td>
+            <td class="py-3.5 px-4 text-right font-bold text-slate-900 whitespace-nowrap">${formatINR(r.amount)}</td>
+            <td class="py-3.5 px-4">${nitHtml}</td>
+            <td class="py-3.5 px-4">
+              <div class="flex flex-wrap gap-1.5">${buildActionButtons(r)}</div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      mobileList.innerHTML = filtered.map((r) => {
+        const agencyBadge = r.agency
+          ? `<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">${escapeHtml(r.agency)}</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-500">Not Allotted</span>`;
+
+        const nitBadge = r.nitMemoNo
+          ? `<span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">NIT: ${escapeHtml(r.nitMemoNo)}</span>`
+          : `<span class="text-xs text-slate-400">NIT Pending</span>`;
+
+        return `
+          <article class="bg-white rounded-xl p-4 shadow-sm border border-slate-200/90 space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-extrabold text-slate-900">Estimate #${r.estNo}</span>
+                  <span class="text-xs text-slate-400">• ${escapeHtml(r.date)}</span>
+                </div>
+                ${r.category ? `<span class="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">${escapeHtml(r.category)}</span>` : ""}
+              </div>
+              <div class="text-right font-extrabold text-base text-slate-900">${formatINR(r.amount)}</div>
+            </div>
+            <p class="text-xs text-slate-700 leading-relaxed">${escapeHtml(r.description)}</p>
+            <div class="flex flex-wrap items-center gap-2 pt-0.5">
+              ${agencyBadge}
+              ${nitBadge}
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+              ${buildActionButtons(r)}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function applyFallbackNotice() {
+      if (allRows.length === 0 && FALLBACK_SNAPSHOT.length > 0) {
+        allRows = FALLBACK_SNAPSHOT;
+        updateKPIs(allRows);
+        renderRows();
+      }
+      const dot = document.getElementById("syncDot");
+      const txt = document.getElementById("syncText");
+      const notice = document.getElementById("statusNotice");
+      dot.className = "w-2 h-2 rounded-full bg-amber-400";
+      txt.textContent = "Preview Snapshot";
+      notice.className = "rounded-xl p-3.5 text-xs sm:text-sm border bg-amber-50 border-amber-200 text-amber-900";
+      notice.textContent = "Showing cached snapshot (unable to reach live Google Sheets feed right now).";
+      notice.classList.remove("hidden");
+    }
+
+    function parseCsvText(csv) {
+      const rows = [];
+      let cur = [], field = "", inQuotes = false;
+      for (let i = 0; i < csv.length; i++) {
+        const ch = csv[i];
+        if (inQuotes) {
+          if (ch === '"' && csv[i + 1] === '"') {
+            field += '"'; i++;
+          } else if (ch === '"') {
+            inQuotes = false;
+          } else {
+            field += ch;
+          }
+        } else {
+          if (ch === '"') {
+            inQuotes = true;
+          } else if (ch === ',') {
+            cur.push(field); field = "";
+          } else if (ch === '\n' || ch === '\r') {
+            if (ch === '\r' && csv[i + 1] === '\n') i++;
+            cur.push(field); field = "";
+            if (cur.some((v) => v !== "")) rows.push(cur);
+            cur = [];
+          } else {
+            field += ch;
+          }
+        }
+      }
+      if (field !== "" || cur.length > 0) {
+        cur.push(field);
+        if (cur.some((v) => v !== "")) rows.push(cur);
+      }
+      if (rows.length <= 1) return [];
+      return rows.slice(1).map((c) => {
+        const estNo = Number(c[0]);
+        if (!c[0] || isNaN(estNo)) return null;
+        return {
+          estNo,
+          date: (c[1] || "").trim(),
+          agency: (c[2] || "").trim(),
+          amount: Number(String(c[3] || "0").replace(/[^0-9.-]/g, "")) || 0,
+          category: (c[4] || "").trim(),
+          description: (c[5] || "").trim(),
+          nitStatus: (c[6] || "").trim(),
+          nitMemoNo: (c[7] || "").trim(),
+          nitMemoDate: (c[8] || "").trim(),
+          approvedCost: Number(String(c[9] || "0").replace(/[^0-9.-]/g, "")) || 0,
+          notesheetUrl: (c[10] || "").trim(),
+          estimateUrl: (c[11] || "").trim(),
+          notesheetFolderUrl: (c[12] || "").trim(),
+          estimateFolderUrl: (c[13] || "").trim(),
+          estimatePdfUrl: (c[14] || "").trim(),
+          notesheetPdfUrl: (c[15] || "").trim()
+        };
+      }).filter(Boolean).sort((a, b) => a.estNo - b.estNo);
+    }
+
+    function applyLiveSuccess(rows) {
+      if (rows.length > 0) {
+        allRows = rows;
+        updateKPIs(allRows);
+        renderRows();
+      }
+      const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      setSyncState("live", `Live Synced • ${nowStr}`);
+      document.getElementById("lastUpdatedFoot").textContent = `Last synced at ${nowStr}`;
+    }
+
+    async function loadLiveData() {
+      setSyncState("loading", "Syncing live data...");
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(FEED_SHEET)}&_t=${Date.now()}`;
+      try {
+        const res = await fetch(csvUrl, { cache: "no-store" });
+        if (res.ok) {
+          const csvText = await res.text();
+          if (csvText && csvText.includes("Estimate_No")) {
+            const rows = parseCsvText(csvText);
+            if (rows.length > 0) {
+              applyLiveSuccess(rows);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback to JSONP below
+      }
+
+      const prevScript = document.getElementById("gvizJsonpScript");
+      if (prevScript) prevScript.remove();
+
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          applyFallbackNotice();
+        }
+      }, 9000);
+
+      const onData = function (json) {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        try {
+          const rows = parseGvizJson(json);
+          applyLiveSuccess(rows);
+        } catch (e) {
+          applyFallbackNotice();
+        }
+      };
+
+      window.handleGvizData = onData;
+      window.google = window.google || {};
+      window.google.visualization = window.google.visualization || {};
+      window.google.visualization.Query = window.google.visualization.Query || {};
+      window.google.visualization.Query.setResponse = onData;
+
+      const script = document.createElement("script");
+      script.id = "gvizJsonpScript";
+      script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:handleGvizData&headers=1&sheet=${encodeURIComponent(FEED_SHEET)}&_t=${Date.now()}`;
+      script.onerror = function () {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          applyFallbackNotice();
+        }
+      };
+      document.body.appendChild(script);
+    }
+
+    document.getElementById("searchInput").addEventListener("input", renderRows);
+    document.getElementById("refreshBtn").addEventListener("click", loadLiveData);
+
+    document.querySelectorAll(".filter-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentFilter = btn.dataset.filter;
+        document.querySelectorAll(".filter-btn").forEach((b) => {
+          b.className = b === btn
+            ? "filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-blue-600 text-white cursor-pointer"
+            : "filter-btn px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer";
+        });
+        renderRows();
+      });
+    });
+
+    loadLiveData();
+    setInterval(loadLiveData, 60000);
+  </script>
+</body>
+</html>
